@@ -3,6 +3,7 @@ package com.example.ticketprice.service;
 import com.example.ticketprice.model.BasePrice;
 import com.example.ticketprice.model.Tax;
 import com.example.ticketprice.model.dto.PriceRequest;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
@@ -18,15 +19,18 @@ public class PriceService {
     private final BasePriceService basePriceService;
     private final TaxService taxService;
     private final MessageSource messageSource;
+    private final MeterRegistry meterRegistry;
 
-    public PriceService(BasePriceService basePriceService, TaxService taxService, MessageSource messageSource) {
+    public PriceService(BasePriceService basePriceService, TaxService taxService, MessageSource messageSource, MeterRegistry meterRegistry) {
         this.basePriceService = basePriceService;
         this.taxService = taxService;
         this.messageSource = messageSource;
+        this.meterRegistry = meterRegistry;
     }
 
     public String calculatePrice(PriceRequest request) {
         StringBuilder result = new StringBuilder();
+        meterRegistry.counter("call.price.calculation.api.counter").increment();
         result.append(messageSource.getMessage("ticketPrice", null, Locale.getDefault()));
         AtomicReference<BigDecimal> total = new AtomicReference<>(BigDecimal.ZERO); // Use AtomicReference to hold total
 
@@ -72,6 +76,8 @@ public class PriceService {
             total.set(total.get().add(ticketPrice));
         });
         result.append(messageSource.getMessage("result", new Object[]{String.format("%.2f", total.get().setScale(2, RoundingMode.HALF_UP))}, Locale.getDefault()));
+
+        meterRegistry.counter("done.price.calculation.api.counter", "status", "success").increment();
         return result.toString();
     }
 
