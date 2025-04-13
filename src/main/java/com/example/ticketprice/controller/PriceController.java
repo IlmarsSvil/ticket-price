@@ -22,7 +22,7 @@ public class PriceController {
 
     @Operation(summary = "Calculate provisional ticket prices for all passengers together")
     @PostMapping("/calculate-price")
-    public BigDecimal calculatePrice(@RequestBody PriceRequest request) {
+    public String calculatePrice(@RequestBody PriceRequest request) {
         return priceService.calculatePrice(request);
     }
 }

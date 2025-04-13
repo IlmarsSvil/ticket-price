@@ -3,11 +3,13 @@ package com.example.ticketprice.service;
 import com.example.ticketprice.model.BasePrice;
 import com.example.ticketprice.model.Tax;
 import com.example.ticketprice.model.dto.PriceRequest;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -15,14 +17,17 @@ import java.util.concurrent.atomic.AtomicReference;
 public class PriceService {
     private final BasePriceService basePriceService;
     private final TaxService taxService;
+    private final MessageSource messageSource;
 
-
-    public PriceService(BasePriceService basePriceService, TaxService taxService) {
+    public PriceService(BasePriceService basePriceService, TaxService taxService, MessageSource messageSource) {
         this.basePriceService = basePriceService;
         this.taxService = taxService;
+        this.messageSource = messageSource;
     }
 
-    public BigDecimal calculatePrice(PriceRequest request) {
+    public String calculatePrice(PriceRequest request) {
+        StringBuilder result = new StringBuilder();
+        result.append(messageSource.getMessage("ticketPrice", null, Locale.getDefault()));
         AtomicReference<BigDecimal> total = new AtomicReference<>(BigDecimal.ZERO); // Use AtomicReference to hold total
 
         BigDecimal taxRate = Optional.ofNullable(taxService.findByDate(LocalDate.now()))
@@ -36,29 +41,38 @@ public class PriceService {
                             basePriceService.getByTerminalName(passenger.getTerminal())
                     ).map(BasePrice::getBasePrice)
                     .orElseThrow(() -> new IllegalStateException("Base price for terminal or terminal not found or invalid: " + passenger.getTerminal()));
-
-
             BigDecimal bagCount = Optional.of(passenger.getBags())
-                    .filter(bagCountValue -> bagCountValue >= 0)  // Optional filter for invalid values
+                    .filter(bagCountValue -> bagCountValue >= 0)
                     .map(BigDecimal::valueOf)
                     .orElseThrow(() -> new IllegalArgumentException("Bag count cannot be null or negative"));
+
 
             //Person Ticket**
             BigDecimal ticketPrice = addKidsDiscount(basePrice, passenger.getAge());
             ticketPrice = addTax(ticketPrice, taxRate);
+            if (passenger.getAge() > 18) {
+                result.append(messageSource.getMessage("adult", new Object[]{String.format("%.2f", ticketPrice.setScale(2, RoundingMode.HALF_UP))}, Locale.getDefault()));
+            } else {
+                result.append(messageSource.getMessage("kid", new Object[]{String.format("%.2f", ticketPrice.setScale(2, RoundingMode.HALF_UP))}, Locale.getDefault()));
+            }
 
             //Baggage**
             BigDecimal baggageCost = basePrice.multiply(bagCount).multiply(BigDecimal.valueOf(0.3));
-            //add pvn to baggage
             BigDecimal baggageWithPVN = addTax(baggageCost, taxRate);
-
+            if (bagCount.compareTo(BigDecimal.ONE) > 0) {
+                result.append(messageSource.getMessage("multipleBags", new Object[]{bagCount, String.format("%.2f", baggageWithPVN.setScale(2, RoundingMode.HALF_UP))}, Locale.getDefault()));
+            } else {
+                result.append(messageSource.getMessage("bag", new Object[]{bagCount, String.format("%.2f", baggageWithPVN.setScale(2, RoundingMode.HALF_UP))}, Locale.getDefault()));
+            }
 
             //add together ticket+baggage
             ticketPrice = ticketPrice.add(baggageWithPVN);
+
             //add this individual persons ticket Price to total
             total.set(total.get().add(ticketPrice));
         });
-        return total.get().setScale(2, RoundingMode.HALF_UP);
+        result.append(messageSource.getMessage("result", new Object[]{String.format("%.2f", total.get().setScale(2, RoundingMode.HALF_UP))}, Locale.getDefault()));
+        return result.toString();
     }
 
     //50% discount if under 18
