@@ -1,0 +1,132 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: ilmars
+      changes:
+        - createTable:
+            tableName: base_price
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: terminal_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: base_price
+                  type: decimal
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 2
+      author: ilmars
+      changes:
+        - createTable:
+            tableName: tax
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tax_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tax_rate
+                  type: decimal
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 3
+      author: ilmars
+      changes:
+        - insert:
+            tableName: base_price
+            columns:
+              - column:
+                  name: terminal_name
+                  value: "Viļņa- Lietuva"
+              - column:
+                  name: base_price
+                  value: 10.00
+
+  - changeSet:
+      id: 4
+      author: ilmars
+      changes:
+        - insert:
+            tableName: tax
+            columns:
+              - column:
+                  name: tax_date
+                  value: "2025-04-13"
+              - column:
+                  name: tax_rate
+                  value: 21
+  - changeSet:
+      id: 5
+      author: ilmars
+      changes:
+        - insert:
+            tableName: base_price
+            columns:
+              - column:
+                  name: terminal_name
+                  value: "Riga"
+              - column:
+                  name: base_price
+                  value: 5.00
+
+  - changeSet:
+      id: 6
+      author: ilmars
+      changes:
+        - insert:
+            tableName: tax
+            columns:
+              - column:
+                  name: tax_date
+                  value: "2025-04-11"
+              - column:
+                  name: tax_rate
+                  value: 23
+  - changeSet:
+      id: 7
+      author: ilmars
+      changes:
+        - insert:
+            tableName: base_price
+            columns:
+              - column:
+                  name: terminal_name
+                  value: "Kauna"
+              - column:
+                  name: base_price
+                  value: 2.00
+
+  - changeSet:
+      id: 8
+      author: ilmars
+      changes:
+        - insert:
+            tableName: tax
+            columns:
+              - column:
+                  name: tax_date
+                  value: "2025-04-09"
+              - column:
+                  name: tax_rate
+                  value: 30
