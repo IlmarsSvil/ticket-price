@@ -11,13 +11,13 @@ import java.util.List;
               "name": "John Doe",
               "age": 30,
               "terminal": "Viļņa- Lietuva",
-              "bags": 1
+              "bags": 2
             },
             {
               "name": "Jane Smith",
               "age": 17,
               "terminal": "Viļņa- Lietuva",
-              "bags": 2
+              "bags": 1
             }
           ]
         }
